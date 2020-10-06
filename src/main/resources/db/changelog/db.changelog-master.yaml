@@ -1,0 +1,7 @@
+databaseChangeLog:
+  # Can't use includeAll due to BUG https://liquibase.jira.com/browse/CORE-3344
+  # You must add the file separately if you want to add new SQL
+  # - includeAll:
+  #    path: db/changelog/changes/
+  - include:
+      file: db/changelog/changes/quartz.sql
