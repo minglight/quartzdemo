@@ -1,7 +1,7 @@
 package org.ming.quartzdemo.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.ming.quartzdemo.scheduler.ScheduleManager;
+import org.ming.quartzdemo.scheduler.SimpleJobManager;
 import org.quartz.ObjectAlreadyExistsException;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,7 @@ public class JobController {
 
 
     @Autowired
-    private ScheduleManager scheduleManager;
+    private SimpleJobManager simpleJobManager;
 
     @PostMapping("/job")
 
@@ -23,7 +23,7 @@ public class JobController {
 
         // define the job and tie it to our HelloJob class
         try {
-            this.scheduleManager.executeJob(id);
+            this.simpleJobManager.executeJob(id, 2);
             return "OK";
         } catch (final ObjectAlreadyExistsException ex) {
             log.info("Job is under execution, please wait, id={}", id);

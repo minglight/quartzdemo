@@ -3,7 +3,6 @@ package org.ming.quartzdemo.scheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.JobListener;
 import org.quartz.SchedulerException;
 import org.quartz.listeners.JobListenerSupport;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +12,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class RetryJobListener extends JobListenerSupport {
 
-    public static final int MAX_RETRY = 2;
+//    public static final int MAX_RETRY = 2;
 
     @Autowired
-    private ScheduleManager scheduleManager;
+    private SimpleJobManager simpleJobManager;
 
     @Override
     public String getName() {
@@ -26,17 +25,23 @@ public class RetryJobListener extends JobListenerSupport {
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
         if(jobException != null){
-            retryJob(context);
+            final Integer maxRetry = context.getMergedJobDataMap().get(SimpleJobManager.MAX_RETRY_KEY) == null ? 0 :
+                Integer.valueOf(context.getMergedJobDataMap().get(SimpleJobManager.RETRY_KEY).toString());
+
+            if(maxRetry != 0){
+                retryJob(context, maxRetry);
+            }
         }
     }
 
-    private void retryJob(JobExecutionContext context) {
-        final Integer retry = context.getMergedJobDataMap().get("retry") == null ? 0 :
-            Integer.valueOf(context.getMergedJobDataMap().get("retry").toString());
-        if (retry <= MAX_RETRY) {
+    private void retryJob(JobExecutionContext context, int maxRetry) {
+        final Integer retry = context.getMergedJobDataMap().get(SimpleJobManager.RETRY_KEY) == null ? 0 :
+            Integer.valueOf(context.getMergedJobDataMap().get(SimpleJobManager.RETRY_KEY).toString());
+
+        if (retry <= maxRetry) {
             log.debug("job failed, call reschedule: jobId={}", context.getJobDetail().getKey().getName());
             try {
-                    scheduleManager.rescheduleJob(context.getJobDetail().getKey().getName(), retry);
+                    simpleJobManager.reschedule(context.getJobDetail().getKey().getName(), retry);
             } catch (SchedulerException e) {
                 log.error("Retry failed!!", e);
             }
